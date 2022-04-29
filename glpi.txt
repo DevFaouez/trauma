@@ -1,0 +1,156 @@
+Installation Apache2:
+
+apt install apache2
+systemctl status apache2
+
+
+
+Installation PHP 7.0:
+
+apt install php7.0 php7.0-curl php7.0-json php7.0-gmp php7.0-mbstring php7.0-gd php7.0-mcrypt libapache2-mod-php7.0 php7.0-mysql php7.0-intl php7.0-sqlite3 php7.0-xml php7.0-zip
+
+systemctl restart apache2
+
+
+Pour tester le PHP, créez un fichier glpi.php dans le répertoire /var/www/html
+cd /var/www/html
+nano glpi.php
+
+Ajoutez :
+
+<?php 
+phpinfo(); 
+?>
+
+
+enregistrer et sorter.
+
+Ouvrir ce fichier via votre navigateur :http://localhost/glpi.php
+
+Vous devez avoir une page web qui affiche la version php qui s'affiche.
+
+
+
+Installation MariaDB 10.1:
+apt install mariadb-server-10.1
+
+mysql_secure_installation
+
+Enter current password for root (enter for none): // Entrée (pas de password par défaut)
+...
+Set root password? [Y/n] // si vous souhaitez ajouter un mot de passe ou pas.
+...
+Remove anonymous users? [Y/n] Y
+Disallow root login remotely? [Y/n] Y
+Remove test database and access to it? [Y/n] Y
+Reload privilege tables now? [Y/n] Y
+
+
+Base de données GLPI:
+
+mysql -u root
+
+create database db_glpi;
+grant all privileges on db_glpi.* to admindb_glpi@localhost identified by "password";
+
+
+exit;
+
+
+Installation:
+
+cd /tmp
+
+wget https://github.com/glpi-project/glpi/releases/download/9.3.3/glpi-9.3.3.tgz
+
+tar zxvf glpi-9.3.3.tgz
+
+shopt -s dotglob
+rm /var/www/html/index.html
+cp -r glpi/* /var/www/html/
+chown -R www-data /var/www/html
+
+
+
+nano /etc/apache2/sites-available/000-default.conf
+
+ajouter:
+
+<Directory /var/www/html>
+Options Indexes FollowSymLinks
+AllowOverride All
+Require all granted
+</Directory>
+
+
+systemctl restart apache2
+
+
+
+Solution : pour les extensions manquantes :
+
+
+apt-get install php7.0-ldap php7.0-xmlrpc php7.0-imap php-apcu php-cas
+
+
+a2enmod rewrite
+
+systemctl restart apache2
+
+
+
+
+
+Connexion:
+
+Serveur : localhost
+Utilisateur : admindb_glpi
+Mot de passe : ta mot de passe
+
+
+'''''''''''''''''''''''''''''''''''''''''''
+OU CAS OU T'A OUBLIER TA MOT DE PASSE:
+SOLUTION:
+
+
+Étape 1: Arrêtez le serveur MySQL:
+
+/etc/init.d/mysql stop
+
+Étape 2: Démarrez le serveur MySQL sans le système de privilège.
+
+mysqld --skip-grant-tables &
+
+Étape 3: Connectez - vous au serveur MySQL.
+
+
+mysql -u root
+
+
+Étape 4: Définissez un nouveau mot de passe pour l'utilisateur root.
+
+
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
+FLUSH PRIVILEGES;
+exit;
+
+
+
+FLUSH PRIVILEGES;
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('new_password');
+FLUSH PRIVILEGES;
+exit;
+
+
+
+Étape 5: Redémarrez le serveur MySQL.
+
+
+ /etc/init.d/mysql stop
+ /etc/init.d/mysql start
+
+
+
+
+
